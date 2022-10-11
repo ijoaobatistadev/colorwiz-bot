@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Colorwiz Bot",
+  "version": "0.0.1",
+  "description": "Colorwiz Bot para sugestões de cores assertivas.",
+  "icons": {
+    "16": "/app/icons/icon-16.png",
+    "32": "/app/icons/icon-32.png",
+    "48": "/app/icons/icon-48.png",
+    "128": "/app/icons/icon-128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.colorwiz.shop/*"],
+      "js": ["/app/jquery.js", "/app/content.js"]
+    }
+  ]
+}
