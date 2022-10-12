@@ -1,3 +1,17 @@
+// Fica true quando a sugestão for "await" e fica false após o primeiro acerto
+var isSugestionAwait = false;
+
+// Fica true quando o ultimo resultado vem a cor violeta e fica false quando
+// aguarda 5 operações futuras
+var isLastResultViolet = false;
+
+// Numero de operações que deve ser aguardado caso venha uma cor violeta no
+// ultimo resultado
+var lastResultVioletCountDefault = 5;
+
+// Variavel para ir fazendo o countdown
+var lastResultVioletCount = lastResultVioletCountDefault;
+
 function getTimeInterval(callback) {
   setInterval(() => {
     let m1 = Number($($('.time-sub')[0]).text());
@@ -52,46 +66,74 @@ function getSugestion(sugestionData) {
     : null;
 }
 
-function getResult(lastData, sugestion) {
-  let lastColour = lastData.is_red
-    ? 'red'
-    : lastData.is_green
-    ? 'green'
-    : lastData.is_violet
-    ? 'violet'
-    : null;
-  console.log('ultima cor:', lastColour);
-  console.log('sugestão:', sugestion);
-  return sugestion === lastColour;
-}
-
 async function getNewSugestion() {
   let sugestionData = await getPageData(10);
   let sugestion = getSugestion(
     sugestionData.queryset[sugestionData.queryset.length - 1],
   );
+  if (sugestion === 'await') {
+    isSugestionAwait = true;
+  }
   return sugestion;
 }
 
-async function getResultSugestion(sugestion) {
+async function getLastResult() {
   let lastData = await getPageData(1);
-  let isWin = getResult(
-    lastData.queryset[lastData.queryset.length - 1],
-    sugestion,
-  );
-  return isWin;
+  if (lastData.queryset[0].is_violet) {
+    isLastResultViolet = true;
+  }
+  return lastData.queryset[0].is_green
+    ? 'green'
+    : lastData.queryset[0].is_red
+    ? 'red'
+    : null;
+}
+
+function alertSugestion(sugestion) {
+  if (isLastResultViolet && lastResultVioletCount > 0) {
+    lastResultVioletCount = lastResultVioletCount - 1;
+  }
+
+  if (isLastResultViolet && lastResultVioletCount === 0) {
+    isLastResultViolet = false;
+    lastResultVioletCount = lastResultVioletCountDefault;
+  }
+
+  if (isSugestionAwait && !isLastResultViolet) {
+    return 'Aguarde o primeiro acerto para fazer uma nova entrada.';
+  }
+
+  if (isLastResultViolet && !isSugestionAwait) {
+    return `Aguarde ${lastResultVioletCountDefault} entradas futuras para fazer uma nova entrada.`;
+  }
+
+  if (isLastResultViolet && isSugestionAwait) {
+    return 'Não é momento para novas entradas.';
+  }
+  return sugestion;
+}
+
+function isWin(sugestion, lastResult) {
+  let result = sugestion === lastResult;
+  if (result) {
+    isSugestionAwait = false;
+  }
+  return result;
 }
 
 async function start() {
   let sugestion = await getNewSugestion();
 
-  console.log(sugestion);
+  console.log('Sugestão inicial:', sugestion);
 
   getTimeInterval(async () => {
-    let resultSugestion = await getResultSugestion(sugestion);
-    console.log('Acertou?', resultSugestion);
+    let lastResult = await getLastResult();
+    console.log('Acertou?', isWin(sugestion, lastResult));
+    console.log('Ultimo resultado:', lastResult);
+    console.log('Ultima sugestão:', sugestion);
     sugestion = await getNewSugestion();
-    console.log('Proxima sugestão:', sugestion);
+    console.log('Proxima sugestão:', alertSugestion(sugestion));
+    console.log('______________________________________________');
   });
 }
 
