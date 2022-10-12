@@ -123,12 +123,11 @@ function isWin(sugestion, lastResult) {
 
 async function start() {
   let sugestion = await getNewSugestion();
-
   console.log('Sugestão inicial:', sugestion);
-
   getTimeInterval(async () => {
     let lastResult = await getLastResult();
-    console.log('Acertou?', isWin(sugestion, lastResult));
+    let isWinOperation = isWin(sugestion, lastResult);
+    console.log('Acertou?', isWinOperation);
     console.log('Ultimo resultado:', lastResult);
     console.log('Ultima sugestão:', sugestion);
     sugestion = await getNewSugestion();
